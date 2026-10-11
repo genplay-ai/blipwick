@@ -48,7 +48,19 @@ test('a long turn sends a "finished" push with the reply and project', async ($,
   expect(String(sent[0].body.topic)).toMatch(/^claude-[a-z2-9]{20}$/)
 })
 
-test('a quick turn sends nothing', async ($, on) => {
+test('a quick turn still sends a push by default', async ($, on) => {
+  mock.store(on)
+  const clock = mock.clock(on)
+  const sent = captureFetch(on)
+  answerEngine(on)
+
+  await runTurn($, clock, 5_000)
+
+  expect(sent.length).toBe(1)
+  expect(sent[0].body.title).toBe('my-app: Claude finished (5s)')
+})
+
+test('a turn shorter than minTurnSeconds sends nothing', { options: { minTurnSeconds: 30 } }, async ($, on) => {
   mock.store(on)
   const clock = mock.clock(on)
   const sent = captureFetch(on)

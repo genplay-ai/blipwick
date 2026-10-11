@@ -1,6 +1,6 @@
 {
   "name": "ping-me",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Push notifications to your phone (via ntfy) when Claude Code finishes, needs your input, or stops on an error.",
   "author": { "name": "GenPlay AI" },
   "license": "MIT",
@@ -35,8 +35,8 @@
     "minTurnSeconds": {
       "type": "number",
       "title": "Minimum turn length (seconds)",
-      "description": "Only send a 'finished' notification when the turn ran at least this long, so quick replies you are watching don't ping your phone.",
-      "default": 30
+      "description": "Only send a 'finished' notification when the turn ran at least this long. 0 sends one after every turn; raise it (e.g. 30) so quick replies you are watching don't ping your phone.",
+      "default": 0
     }
   }
 }

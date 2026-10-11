@@ -33,7 +33,7 @@ That's it. You can also watch the topic in a browser at `https://ntfy.sh/<your-t
 
 | When | Title | Priority |
 | --- | --- | --- |
-| A turn finishes, if it ran at least `minTurnSeconds` | `my-app: Claude finished (4m 12s)`, with Claude's last reply as the body | default |
+| A turn finishes (only turns of at least `minTurnSeconds`, if you set it) | `my-app: Claude finished (4m 12s)`, with Claude's last reply as the body | default |
 | Claude needs permission or is waiting for input | `my-app: Claude needs your input` | high |
 | The turn stops on an API error | `my-app: Claude stopped - Rate limited` | urgent |
 
@@ -49,7 +49,7 @@ Change these with `/config`, under **ping-me**:
 | `server` | `https://ntfy.sh` | Your own server, if you [self-host ntfy](https://docs.ntfy.sh/install/). |
 | `token` | *(empty)* | An access token (`tk_...`) for protected topics. It's stored in secure storage. |
 | `notifyOn` | `all` | `all`, `input-and-errors` (no "finished" pushes), or `errors`. |
-| `minTurnSeconds` | `30` | Don't send "finished" pushes for quick turns you were watching anyway. Set it to `0` to get a push every time. |
+| `minTurnSeconds` | `0` | Send a "finished" push only for turns that ran at least this long. `0` pushes after every turn; raise it (e.g. `30`) to skip quick turns you were watching anyway. |
 
 ## Privacy
 

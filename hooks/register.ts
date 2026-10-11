@@ -145,7 +145,7 @@ function readConfig(options: PluginOptions): Config {
     server: String(options.server || 'https://ntfy.sh').trim().replace(/\/+$/, ''),
     token: String(options.token || '').trim(),
     notifyOn: notifyOn === 'errors' || notifyOn === 'input-and-errors' ? notifyOn : 'all',
-    minTurnMs: Math.max(0, Number(options.minTurnSeconds ?? 30) || 0) * 1000,
+    minTurnMs: Math.max(0, Number(options.minTurnSeconds ?? 0) || 0) * 1000,
   }
 }
 
