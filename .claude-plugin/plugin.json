@@ -1,0 +1,42 @@
+{
+  "name": "ping-me",
+  "version": "0.1.0",
+  "description": "Push notifications to your phone (via ntfy) when Claude Code finishes, needs your input, or stops on an error.",
+  "author": { "name": "GenPlay AI" },
+  "license": "MIT",
+  "keywords": ["notifications", "ntfy", "push", "mobile", "remote"],
+  "userConfig": {
+    "topic": {
+      "type": "string",
+      "title": "ntfy topic",
+      "description": "The ntfy topic to publish to. Leave empty and one random, hard-to-guess topic is generated for you; run /notify-setup to see it.",
+      "default": ""
+    },
+    "server": {
+      "type": "string",
+      "title": "ntfy server",
+      "description": "The ntfy server URL. Use your own for self-hosted ntfy.",
+      "default": "https://ntfy.sh"
+    },
+    "token": {
+      "type": "string",
+      "title": "ntfy access token",
+      "description": "Optional. An access token (tk_...) for a protected topic or self-hosted server.",
+      "default": "",
+      "sensitive": true
+    },
+    "notifyOn": {
+      "type": "string",
+      "title": "When to notify",
+      "description": "all: finished + needs input + errors. input-and-errors: skip 'finished'. errors: only when Claude stops on an error.",
+      "options": ["all", "input-and-errors", "errors"],
+      "default": "all"
+    },
+    "minTurnSeconds": {
+      "type": "number",
+      "title": "Minimum turn length (seconds)",
+      "description": "Only send a 'finished' notification when the turn ran at least this long, so quick replies you are watching don't ping your phone.",
+      "default": 30
+    }
+  }
+}

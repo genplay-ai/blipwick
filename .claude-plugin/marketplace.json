@@ -1,0 +1,14 @@
+{
+  "name": "ping-me",
+  "owner": {
+    "name": "GenPlay AI"
+  },
+  "plugins": [
+    {
+      "name": "ping-me",
+      "source": "./",
+      "description": "Push notifications to your phone (via ntfy) when Claude Code finishes, needs your input, or stops on an error."
+    }
+  ],
+  "description": "Phone push notifications for Claude Code (finished, needs input, errors)."
+}
