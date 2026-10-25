@@ -1,0 +1,14 @@
+{
+  "name": "blipwick",
+  "version": "0.4.0",
+  "description": "Push notifications to your phone (via ntfy) when Claude Code or ChatGPT finishes, needs you, or stops on an error.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test cloud/notify.test.mjs",
+    "sync": "node scripts/sync-core.mjs",
+    "check": "node scripts/sync-core.mjs --check",
+    "install-cloud": "node scripts/install-cloud.mjs"
+  }
+}

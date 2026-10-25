@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>blipwick</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: #16181d;
+        --muted: #5c6370;
+        --bg: #ffffff;
+        --field: #ffffff;
+        --line: #d7dae0;
+        --accent: #3b6ef5;
+        --bad: #c0392b;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #e6e8ec;
+          --muted: #9aa1ac;
+          --bg: #1b1d22;
+          --field: #24272e;
+          --line: #3a3f48;
+          --accent: #7aa0ff;
+          --bad: #ff8a7a;
+        }
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+        width: 380px;
+        box-sizing: border-box;
+        background: var(--bg);
+        color: var(--fg);
+        font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 17px;
+      }
+      p.lede {
+        margin: 0 0 18px;
+        color: var(--muted);
+      }
+      label {
+        display: block;
+        margin-bottom: 14px;
+      }
+      .name {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      .hint {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      input[type='text'],
+      input[type='password'],
+      input[type='number'] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 7px 9px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--field);
+        color: inherit;
+        font: inherit;
+      }
+      label.check {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      label.check input {
+        margin-top: 3px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      button {
+        padding: 7px 13px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--field);
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      button.primary {
+        border-color: transparent;
+        background: var(--accent);
+        color: #fff;
+      }
+      #status {
+        margin: 14px 0 0;
+        min-height: 1.5em;
+        white-space: pre-wrap;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      #status.bad {
+        color: var(--bad);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>blipwick</h1>
+    <p class="lede">A push to your phone when ChatGPT finishes a long reply.</p>
+
+    <label>
+      <span class="name">ntfy topic</span>
+      <input type="text" id="topic" placeholder="generated for you" spellcheck="false" />
+      <span class="hint">
+        Use the same topic as the Claude Code plugin (run <code>/notify-setup</code> there to see it)
+        and both land on one phone subscription.
+      </span>
+    </label>
+
+    <label>
+      <span class="name">ntfy server</span>
+      <input type="text" id="server" placeholder="https://ntfy.sh" spellcheck="false" />
+      <span class="hint">Change this only if you self-host ntfy.</span>
+    </label>
+
+    <label>
+      <span class="name">Access token</span>
+      <input type="password" id="token" placeholder="tk_… (optional)" spellcheck="false" />
+      <span class="hint">For a protected topic. Kept on this device, never synced.</span>
+    </label>
+
+    <label>
+      <span class="name">Minimum reply length (seconds)</span>
+      <input type="number" id="minTurnSeconds" min="0" step="1" />
+      <span class="hint">0 pushes after every reply. Raise it to skip the quick ones.</span>
+    </label>
+
+    <label class="check">
+      <input type="checkbox" id="onlyWhenHidden" />
+      <span>
+        <span class="name">Only when the tab is in the background</span>
+        <span class="hint">Off means you get a push even while watching the reply.</span>
+      </span>
+    </label>
+
+    <div class="row">
+      <button type="button" class="primary" id="save">Save</button>
+      <button type="button" id="test">Send test push</button>
+    </div>
+
+    <p id="status"></p>
+
+    <script src="options.js" type="module"></script>
+  </body>
+</html>

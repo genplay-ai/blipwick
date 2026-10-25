@@ -1,7 +1,24 @@
 import type { EngineInterface, PluginOptions, Register } from 'claude-code'
+import {
+  basename,
+  errorPush,
+  errorText,
+  finishedPush,
+  needsInputPush,
+  normalizeNotifyOn,
+  normalizeServer,
+  ntfyRequest,
+  randomId,
+  testPush,
+} from '../core/push.js'
 
-// One push per event, published to ntfy (https://ntfy.sh) as JSON so titles
-// and bodies keep their UTF-8 text.
+// The Claude Code adapter: it turns engine events into the pushes described in
+// core/push.js and sends them with $.http.fetch. One push per event, published
+// to ntfy (https://ntfy.sh) as JSON so titles and bodies keep their UTF-8 text.
+
+type Push = { title: string; message: string; tags: string[]; priority: number }
+
+type About = { where: string; agent: string; product: string }
 
 type Config = {
   topic: string
@@ -11,15 +28,7 @@ type Config = {
   minTurnMs: number
 }
 
-type Push = {
-  title: string
-  message: string
-  tags: string[]
-  priority: number
-}
-
 const TOPIC_KEY = 'generatedTopic'
-const MAX_MESSAGE = 400
 
 const ERROR_TEXT: Record<string, string> = {
   rate_limit: 'Rate limited',
@@ -48,12 +57,7 @@ export const register: Register = (on, options) => {
   on('command.run', { command: 'notify-setup' }, async $ => {
     const topic = await topicFor($, cfg)
     try {
-      await publish($, cfg, topic, {
-        title: 'blipwick is working',
-        message: 'You will get a push here when Claude Code finishes, needs you, or stops on an error.',
-        tags: ['tada'],
-        priority: 3,
-      })
+      await publish($, cfg, topic, testPush('Claude Code finishes, needs you, or stops on an error'))
     } catch (err) {
       return { text: `Could not reach ${cfg.server}: ${errorText(err)}` }
     }
@@ -73,25 +77,14 @@ export const register: Register = (on, options) => {
     const tookMs = startedAt === undefined ? Infinity : (await $.clock.now()) - startedAt
     if (tookMs < cfg.minTurnMs) return result
 
-    const took = Number.isFinite(tookMs) ? ` (${formatDuration(tookMs)})` : ''
-    await tryPublish($, cfg, {
-      title: `${basename(e.cwd)}: Claude finished${took}`,
-      message: e.last_assistant_message?.trim() || 'Claude Code is done and waiting for you.',
-      tags: ['white_check_mark'],
-      priority: 3,
-    })
+    await tryPublish($, cfg, finishedPush(about(e.cwd), e.last_assistant_message, tookMs))
     return result
   }).catch(($, e, next) => next(e))
 
   on('classic.Notification', async ($, e, next) => {
     const result = await next(e)
     if (cfg.notifyOn === 'errors') return result
-    await tryPublish($, cfg, {
-      title: `${basename(e.cwd)}: ${e.title || 'Claude needs your input'}`,
-      message: e.message || 'Claude Code is waiting for you.',
-      tags: ['bell'],
-      priority: 4,
-    })
+    await tryPublish($, cfg, needsInputPush(about(e.cwd), e.title, e.message))
     return result
   }).catch(($, e, next) => next(e))
 
@@ -99,14 +92,14 @@ export const register: Register = (on, options) => {
     const result = await next(e)
     turnStartedAt = undefined
     const reason = ERROR_TEXT[e.error] ?? `Error: ${e.error}`
-    await tryPublish($, cfg, {
-      title: `${basename(e.cwd)}: Claude stopped - ${reason}`,
-      message: [e.error_details, e.last_assistant_message].filter(Boolean).join('\n\n') || reason,
-      tags: ['warning'],
-      priority: 5,
-    })
+    const details = [e.error_details, e.last_assistant_message].filter(Boolean).join('\n\n')
+    await tryPublish($, cfg, errorPush(about(e.cwd), reason, details))
     return result
   }).catch(($, e, next) => next(e))
+}
+
+function about(cwd: string | undefined): About {
+  return { where: basename(cwd, 'Claude Code'), agent: 'Claude', product: 'Claude Code' }
 }
 
 async function topicFor($: EngineInterface, cfg: Config): Promise<string> {
@@ -119,14 +112,9 @@ async function topicFor($: EngineInterface, cfg: Config): Promise<string> {
 }
 
 async function publish($: EngineInterface, cfg: Config, topic: string, push: Push): Promise<void> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (cfg.token) headers.Authorization = `Bearer ${cfg.token}`
-  const res = await $.http.fetch(cfg.server, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ topic, ...push, message: clip(push.message) }),
-  })
-  if (!res.ok) throw new Error(`ntfy answered ${res.status}: ${clip(res.text, 200)}`)
+  const { url, init } = ntfyRequest(cfg.server, cfg.token, topic, push)
+  const res = await $.http.fetch(url, init)
+  if (!res.ok) throw new Error(`ntfy answered ${res.status}: ${res.text.slice(0, 200)}`)
 }
 
 // Never let a failed push get in the way of the session.
@@ -139,12 +127,11 @@ async function tryPublish($: EngineInterface, cfg: Config, push: Push): Promise<
 }
 
 function readConfig(options: PluginOptions): Config {
-  const notifyOn = String(options.notifyOn || 'all')
   return {
     topic: String(options.topic || '').trim(),
-    server: String(options.server || 'https://ntfy.sh').trim().replace(/\/+$/, ''),
+    server: normalizeServer(options.server),
     token: String(options.token || '').trim(),
-    notifyOn: notifyOn === 'errors' || notifyOn === 'input-and-errors' ? notifyOn : 'all',
+    notifyOn: normalizeNotifyOn(options.notifyOn),
     minTurnMs: Math.max(0, Number(options.minTurnSeconds ?? 0) || 0) * 1000,
   }
 }
@@ -163,32 +150,8 @@ function setupText(cfg: Config, topic: string): string {
     '',
     'Anyone who knows the topic name can read it, so keep it private.',
     'Change the topic, server, or when you are notified in /config (blipwick).',
+    '',
+    'Using the same topic in the blipwick browser extension puts your ChatGPT',
+    'notifications in this same place. See extension/README.md.',
   ].join('\n')
-}
-
-function errorText(err: unknown): string {
-  return err instanceof Error ? err.message : String(err)
-}
-
-function basename(path: string | undefined): string {
-  if (!path) return 'Claude Code'
-  const parts = path.split(/[\\/]+/).filter(Boolean)
-  return parts[parts.length - 1] || path
-}
-
-function clip(text: string, max = MAX_MESSAGE): string {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text
-}
-
-function formatDuration(ms: number): string {
-  const s = Math.round(ms / 1000)
-  if (s < 60) return `${s}s`
-  const m = Math.floor(s / 60)
-  return m < 60 ? `${m}m ${s % 60}s` : `${Math.floor(m / 60)}h ${m % 60}m`
-}
-
-function randomId(length: number): string {
-  const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789'
-  const bytes = crypto.getRandomValues(new Uint8Array(length))
-  return Array.from(bytes, b => alphabet[b % alphabet.length]).join('')
 }

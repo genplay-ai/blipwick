@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "blipwick",
+  "version": "0.4.0",
+  "description": "Push notifications to your phone (via ntfy) when ChatGPT finishes a long reply.",
+  "icons": { "128": "icons/icon128.png" },
+  "permissions": ["storage"],
+  "host_permissions": ["https://ntfy.sh/*"],
+  "optional_host_permissions": ["https://*/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_title": "blipwick",
+    "default_popup": "options.html",
+    "default_icon": { "128": "icons/icon128.png" }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["detector.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["bridge.js"],
+      "world": "ISOLATED",
+      "run_at": "document_start"
+    }
+  ]
+}

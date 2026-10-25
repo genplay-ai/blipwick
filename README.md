@@ -1,6 +1,6 @@
 # blipwick
 
-Get a push notification on your phone when Claude Code:
+Get a push notification on your phone when your AI assistant:
 
 - ✅ **finishes** a long task
 - 🔔 **needs you**: a permission prompt, or it's waiting for input
@@ -8,21 +8,26 @@ Get a push notification on your phone when Claude Code:
 
 Notifications go through [ntfy](https://ntfy.sh), a free, open-source push service. You don't need an account or API key, and there's no server to run. It works on Windows, macOS and Linux.
 
-## Requirements
+Three parts, one topic:
 
-Claude Code **v2.1.271 or later**. Earlier versions fail to install the plugin with
-`userConfig.notifyOn: Unrecognized key: "options"`. Check yours with `claude --version`,
-and upgrade with `claude update`.
+| Part | Covers | All three kinds of push? |
+| --- | --- | --- |
+| **Claude Code plugin** | Claude Code in the terminal, the desktop app and your IDE | Yes |
+| **[Cloud hooks](cloud/README.md)** | Claude Code cloud sessions, per repository | Yes |
+| **[Browser extension](extension/README.md)** | ChatGPT on the web | Finished only — ChatGPT has no hooks for the rest |
 
-## Install
+Point them all at the same ntfy topic and you subscribe once on your phone. The title says where each push came from.
+
+## Install the Claude Code plugin
 
 Type this at the Claude Code prompt in a terminal session:
 
 ```
-/plugin install blipwick --marketplace genplay-ai/blipwick
+/plugin marketplace add genplay-ai/blipwick
+/plugin install blipwick@blipwick
 ```
 
-Answer `y` to add the marketplace, then press Enter to install for your user. Then run:
+Then run:
 
 ```
 /notify-setup
@@ -35,19 +40,42 @@ The command sends a test push and shows your private topic name. On your phone:
 
 That's it. You can also watch the topic in a browser at `https://ntfy.sh/<your-topic>`.
 
+> Plugins load where the session runs, and a cloud session loads none of them. For those, install the [cloud hooks](cloud/README.md) in the repository instead.
+
+## Install the cloud hooks
+
+Cloud sessions don't load plugins, but they do fire the same hook events and
+they do read the repo they cloned. So the same three pushes are available there
+as a per-repository hook:
+
+```sh
+npm run install-cloud -- /path/to/your/repo
+```
+
+It also needs `ntfy.sh` on the environment's allowed-domains list and an
+`NTFY_TOPIC` environment variable — [cloud/README.md](cloud/README.md) has the
+exact steps and the caveats.
+
+## Install the ChatGPT extension
+
+Load `extension/` unpacked in Chrome, then paste the topic that `/notify-setup`
+printed. Full instructions, settings and how the detection works:
+[extension/README.md](extension/README.md).
+
 ## What you get
 
 | When | Title | Priority |
 | --- | --- | --- |
-| A turn finishes (only turns of at least `minTurnSeconds`, if you set it) | `my-app: Claude finished (4m 12s)`, with Claude's last reply as the body | default |
+| A turn finishes (only turns of at least `minTurnSeconds`, if you set it) | `my-app: Claude finished (4m 12s)`, with the last reply as the body | default |
 | Claude needs permission or is waiting for input | `my-app: Claude needs your input` | high |
 | The turn stops on an API error | `my-app: Claude stopped - Rate limited` | urgent |
+| ChatGPT finishes a reply | `Refactoring a parser: ChatGPT finished (2m 03s)` | default |
 
-`my-app` is the name of the project folder, so you can tell sessions apart.
+For Claude Code, `my-app` is the name of the project folder. For ChatGPT, it's the conversation title. Either way you can tell sessions apart.
 
 ## Settings
 
-Change these with `/config`, under **blipwick**:
+Change these with `/config`, under **blipwick**. The extension has its own, in [its README](extension/README.md#settings).
 
 | Setting | Default | What it does |
 | --- | --- | --- |
@@ -60,9 +88,28 @@ Change these with `/config`, under **blipwick**:
 ## Privacy
 
 - Anyone who knows your topic name can read your notifications. The generated topic is random, so it can't realistically be guessed, but keep it private. For stronger protection, use a token-protected topic or self-host ntfy.
-- The push contains the project folder name and up to 400 characters of Claude's last message. Nothing else leaves your machine, and the push goes only to the server you configure.
+- The push contains the project folder or conversation name and up to 400 characters of the last message. Nothing else leaves your machine, and the push goes only to the server you configure.
 
 ## Development
+
+```
+core/push.js      what a push says and how it reaches ntfy — shared, no I/O
+hooks/register.ts the Claude Code adapter (engine events -> pushes)
+cloud/            the cloud-session adapter (command hooks -> pushes)
+extension/        the ChatGPT adapter (page signals -> pushes)
+```
+
+Adapters bring their own fetch and their own storage; everything about how a
+push is worded lives in `core/push.js`. Two of them can only load files from
+inside their own folder — a packed extension, and the cloud adapter once it is
+copied into a repo — so that file is copied to each and the copies are
+committed:
+
+```sh
+npm run sync               # copy core/push.js to every adapter
+npm run check              # fail if a copy has drifted
+npm test                   # run the cloud adapter's tests
+```
 
 The plugin is a single hooks module, [hooks/register.ts](hooks/register.ts), that runs inside Claude Code's plugin runtime. There's nothing to build.
 
