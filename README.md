@@ -8,6 +8,12 @@ Get a push notification on your phone when Claude Code:
 
 Notifications go through [ntfy](https://ntfy.sh), a free, open-source push service. You don't need an account or API key, and there's no server to run. It works on Windows, macOS and Linux.
 
+## Requirements
+
+Claude Code **v2.1.271 or later**. Earlier versions fail to install the plugin with
+`userConfig.notifyOn: Unrecognized key: "options"`. Check yours with `claude --version`,
+and upgrade with `claude update`.
+
 ## Install
 
 Type this at the Claude Code prompt in a terminal session:

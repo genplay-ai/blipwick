@@ -4,6 +4,7 @@
   "description": "Push notifications to your phone (via ntfy) when Claude Code finishes, needs your input, or stops on an error.",
   "author": { "name": "GenPlay AI" },
   "license": "MIT",
+  "icon": "./.claude-plugin/icon.png",
   "keywords": ["notifications", "ntfy", "push", "mobile", "remote"],
   "userConfig": {
     "topic": {
