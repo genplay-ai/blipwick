@@ -1,4 +1,4 @@
-# ping-me
+# blipwick
 
 Get a push notification on your phone when Claude Code:
 
@@ -13,7 +13,7 @@ Notifications go through [ntfy](https://ntfy.sh), a free, open-source push servi
 Type this at the Claude Code prompt in a terminal session:
 
 ```
-/plugin install ping-me --marketplace genplay-ai/ping-me
+/plugin install blipwick --marketplace genplay-ai/blipwick
 ```
 
 Answer `y` to add the marketplace, then press Enter to install for your user. Then run:
@@ -41,11 +41,11 @@ That's it. You can also watch the topic in a browser at `https://ntfy.sh/<your-t
 
 ## Settings
 
-Change these with `/config`, under **ping-me**:
+Change these with `/config`, under **blipwick**:
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `topic` | *(generated)* | Your ntfy topic. If you leave it empty, ping-me generates a random, hard-to-guess one and saves it. |
+| `topic` | *(generated)* | Your ntfy topic. If you leave it empty, blipwick generates a random, hard-to-guess one and saves it. |
 | `server` | `https://ntfy.sh` | Your own server, if you [self-host ntfy](https://docs.ntfy.sh/install/). |
 | `token` | *(empty)* | An access token (`tk_...`) for protected topics. It's stored in secure storage. |
 | `notifyOn` | `all` | `all`, `input-and-errors` (no "finished" pushes), or `errors`. |

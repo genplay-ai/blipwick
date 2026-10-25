@@ -40,7 +40,7 @@ export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'notify-setup',
-      description: 'Show how to receive ping-me push notifications and send a test',
+      description: 'Show how to receive blipwick push notifications and send a test',
     })
     return next(e)
   })
@@ -49,7 +49,7 @@ export const register: Register = (on, options) => {
     const topic = await topicFor($, cfg)
     try {
       await publish($, cfg, topic, {
-        title: 'ping-me is working',
+        title: 'blipwick is working',
         message: 'You will get a push here when Claude Code finishes, needs you, or stops on an error.',
         tags: ['tada'],
         priority: 3,
@@ -134,7 +134,7 @@ async function tryPublish($: EngineInterface, cfg: Config, push: Push): Promise<
   try {
     await publish($, cfg, await topicFor($, cfg), push)
   } catch (err) {
-    $.ui.log(`ping-me: ${errorText(err)}`)
+    $.ui.log(`blipwick: ${errorText(err)}`)
   }
 }
 
@@ -162,7 +162,7 @@ function setupText(cfg: Config, topic: string): string {
     `  2. Tap "+" and subscribe to the topic "${topic}"${onDefault ? '.' : ` on server ${cfg.server}.`}`,
     '',
     'Anyone who knows the topic name can read it, so keep it private.',
-    'Change the topic, server, or when you are notified in /config (ping-me).',
+    'Change the topic, server, or when you are notified in /config (blipwick).',
   ].join('\n')
 }
 

@@ -1,5 +1,5 @@
 {
-  "name": "ping-me",
+  "name": "blipwick",
   "version": "0.2.0",
   "description": "Push notifications to your phone (via ntfy) when Claude Code finishes, needs your input, or stops on an error.",
   "author": { "name": "GenPlay AI" },

@@ -127,6 +127,6 @@ test('/notify-setup sends a test push and shows the topic', { options: { topic: 
   const { text } = await $.command.run({ command: 'notify-setup' })
 
   expect(sent.length).toBe(1)
-  expect(sent[0].body.title).toBe('ping-me is working')
+  expect(sent[0].body.title).toBe('blipwick is working')
   expect(text).toContain('https://ntfy.sh/demo-topic')
 })
