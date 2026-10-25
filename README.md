@@ -38,7 +38,12 @@ The command sends a test push and shows your private topic name. On your phone:
 1. Install the **ntfy** app: [iOS](https://apps.apple.com/app/ntfy/id1625396347), [Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy), or [F-Droid](https://f-droid.org/packages/io.heckel.ntfy/).
 2. Tap **+** and subscribe to the topic that `/notify-setup` printed.
 
-That's it. You can also watch the topic in a browser at `https://ntfy.sh/<your-topic>`.
+That's it. You can also watch the topic in a browser at `https://ntfy.sh/<your-topic>` — though a browser subscription is not a subscription in the phone app, only a way to read the topic.
+
+You install it once, not once per surface. The plugin lives in your user
+settings, so the same install covers Claude Code in the terminal, in the desktop
+app and in your IDE, and there is no source to clone: Claude Code fetches the
+plugin from GitHub and caches it.
 
 > Plugins load where the session runs, and a cloud session loads none of them. For those, install the [cloud hooks](cloud/README.md) in the repository instead.
 
@@ -84,6 +89,41 @@ Change these with `/config`, under **blipwick**. The extension has its own, in [
 | `token` | *(empty)* | An access token (`tk_...`) for protected topics. It's stored in secure storage. |
 | `notifyOn` | `all` | `all`, `input-and-errors` (no "finished" pushes), or `errors`. |
 | `minTurnSeconds` | `0` | Send a "finished" push only for turns that ran at least this long. `0` pushes after every turn; raise it (e.g. `30`) to skip quick turns you were watching anyway. |
+
+## Nothing arrives
+
+Work down the chain rather than guessing. One command tells you which half is
+broken — ask ntfy what it is holding for your topic:
+
+```sh
+curl -s "https://ntfy.sh/<your-topic>/json?poll=1&since=12h"
+```
+
+**Messages come back.** blipwick is doing its job and the break is on the phone.
+
+- A subscription in a browser is not a subscription in the app. Open the ntfy
+  app and check the topic is in its list. Subscribing pulls the last 12 hours,
+  so the backlog should appear at once; if it stays empty, the topic or the
+  server is wrong.
+- Check the operating system's notification permission for ntfy.
+- On Android, turn off battery optimisation for ntfy. Instant delivery needs a
+  foreground service, and a power saver that kills it leaves you on slow
+  polling, which looks like "sometimes it arrives, very late".
+
+**Nothing comes back.** No push was ever sent.
+
+- Is the session local? A cloud session loads no plugins at all. Run
+  `/notify-setup`: if the command doesn't exist, the plugin isn't loaded there.
+- In the desktop app, the environment selector under the prompt box has to be on
+  a **Local** entry rather than a cloud one. A running cloud session can't be
+  moved to local, so start a new session instead.
+- For cloud sessions, use the [cloud hooks](cloud/README.md), and check that
+  `ntfy.sh` is on the environment's allowed-domains list. The default **Trusted**
+  list doesn't include it, and the push then fails silently.
+- A cloud environment's variables reach a session when it starts, so after
+  changing `NTFY_TOPIC` open a new session rather than reusing the old one.
+- A cloud session runs the `.claude/` of the branch it cloned. The hooks have to
+  be on that branch — usually the default one.
 
 ## Privacy
 
